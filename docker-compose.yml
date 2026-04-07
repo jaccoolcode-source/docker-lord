@@ -6,7 +6,7 @@ services:
     environment:
       - DOCKER_TCP_HOST=host.docker.internal
       - DOCKER_TCP_PORT=2375
-      - DATABASE_URL=postgresql://docker-lord:docker-lord@db:5432/docker-lord
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     depends_on:
       db:
         condition: service_healthy
@@ -24,13 +24,13 @@ services:
     container_name: docker-lord-db
     restart: unless-stopped
     environment:
-      - POSTGRES_DB=docker-lord
-      - POSTGRES_USER=docker-lord
-      - POSTGRES_PASSWORD=docker-lord
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - ./data/db:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U docker-lord"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
       retries: 10
