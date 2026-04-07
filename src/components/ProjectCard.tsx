@@ -13,9 +13,10 @@ interface Props {
   onRemove: (id: string, name: string) => Promise<void>;
   onLogs: () => void;
   onRebuildCmd: (id: string) => Promise<void>;
+  onEdit: (id: string) => void;
 }
 
-export function ProjectCard({ project: p, onAction, onRemove, onLogs, onRebuildCmd }: Props) {
+export function ProjectCard({ project: p, onAction, onRemove, onLogs, onRebuildCmd, onEdit }: Props) {
   const status = p.docker?.status ?? 'unknown';
   const running = p.docker?.running ?? false;
   const dotClass = STATUS_DOT[status] ?? 'error';
@@ -97,6 +98,7 @@ export function ProjectCard({ project: p, onAction, onRemove, onLogs, onRebuildC
           </button>
         )}
         <div className="spacer" />
+        <button className="btn-icon" title="Edit project" onClick={() => onEdit(p.id)}>✏️</button>
         <button className="btn-icon" title="View logs" onClick={onLogs}>📜</button>
         <button
           className="btn-icon"

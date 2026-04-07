@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import Dockerode from 'dockerode';
 import path from 'path';
 import fs from 'fs';
-import { initDb, getProjects, getProject, createProject, deleteProject } from './db';
+import { initDb, getProjects, getProject, createProject, updateProject, deleteProject } from './db';
 import type { Project } from './db';
 
 const app = express();
@@ -91,6 +91,27 @@ app.post('/api/projects', async (req: Request, res: Response) => {
       url: `http://${appName}.localhost`,
     });
     res.status(201).json(project);
+  } catch (err: unknown) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+app.put('/api/projects/:id', async (req: Request, res: Response) => {
+  const project = await getProject(req.params.id);
+  if (!project) return res.status(404).json({ error: 'Not found' });
+
+  const { name, description, appName, containerName, type, port, hostPath, gitRepo, gitBranch } =
+    req.body as Partial<Project>;
+
+  try {
+    const updated = await updateProject(req.params.id, {
+      name, description, appName, containerName, type, port,
+      hostPath: hostPath ?? null,
+      gitRepo: gitRepo ?? null,
+      gitBranch: gitBranch ?? null,
+      url: appName ? `http://${appName}.localhost` : undefined,
+    });
+    res.json(updated);
   } catch (err: unknown) {
     res.status(500).json({ error: (err as Error).message });
   }

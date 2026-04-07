@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Project, NewProject, DiscoveredContainer } from './types';
 import {
-  fetchProjects, addProject, removeProject,
+  fetchProjects, addProject, updateProject, removeProject,
   startProject, stopProject, restartProject,
   getRebuildCmd,
 } from './api';
 import { Header } from './components/Header';
 import { ProjectCard } from './components/ProjectCard';
 import { AddProjectModal } from './components/AddProjectModal';
+import { EditProjectModal } from './components/EditProjectModal';
 import { DiscoverModal } from './components/DiscoverModal';
 import { RebuildModal } from './components/RebuildModal';
 import { LogPanel } from './components/LogPanel';
@@ -18,6 +19,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [showDiscover, setShowDiscover] = useState(false);
+  const [editProjectId, setEditProjectId] = useState<string | null>(null);
   const [rebuildCmd, setRebuildCmd] = useState<string | null>(null);
   const [logProjectId, setLogProjectId] = useState<string | null>(null);
 
@@ -51,6 +53,12 @@ export default function App() {
     setRebuildCmd(data.command);
   };
 
+  const handleEditProject = async (id: string, payload: Partial<NewProject>) => {
+    await updateProject(id, payload);
+    setEditProjectId(null);
+    await loadProjects();
+  };
+
   const handleAddProject = async (payload: NewProject) => {
     await addProject(payload);
     setShowAdd(false);
@@ -69,6 +77,7 @@ export default function App() {
     await loadProjects();
   };
 
+  const editProject = projects.find(p => p.id === editProjectId) ?? null;
   const logProject = projects.find(p => p.id === logProjectId) ?? null;
   const runningCount = projects.filter(p => p.docker?.running).length;
 
@@ -99,6 +108,7 @@ export default function App() {
               onRemove={handleRemove}
               onLogs={() => setLogProjectId(p.id)}
               onRebuildCmd={handleRebuildCmd}
+              onEdit={() => setEditProjectId(p.id)}
             />
           ))}
         </div>
@@ -106,6 +116,14 @@ export default function App() {
 
       {showAdd && (
         <AddProjectModal onClose={() => setShowAdd(false)} onSave={handleAddProject} />
+      )}
+
+      {editProject && (
+        <EditProjectModal
+          project={editProject}
+          onClose={() => setEditProjectId(null)}
+          onSave={handleEditProject}
+        />
       )}
 
       {showDiscover && (

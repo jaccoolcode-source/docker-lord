@@ -17,6 +17,9 @@ export const fetchProjects = () => request<Project[]>('/api/projects');
 export const addProject = (payload: NewProject) =>
   request<Project>('/api/projects', { method: 'POST', body: JSON.stringify(payload) });
 
+export const updateProject = (id: string, payload: Partial<NewProject>) =>
+  request<Project>(`/api/projects/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+
 export const removeProject = (id: string) =>
   request<{ removed: Project }>(`/api/projects/${id}`, { method: 'DELETE' });
 

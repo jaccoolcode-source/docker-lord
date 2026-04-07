@@ -90,6 +90,29 @@ export async function createProject(p: Omit<Project, never>): Promise<Project> {
   return rowToProject(rows[0]);
 }
 
+export async function updateProject(id: string, fields: Partial<Omit<Project, 'id'>>): Promise<Project | null> {
+  const allowed: (keyof typeof fields)[] = ['name', 'description', 'appName', 'containerName', 'type', 'port', 'hostPath', 'gitRepo', 'gitBranch', 'url'];
+  const colMap: Record<string, string> = {
+    name: 'name', description: 'description', appName: 'app_name', containerName: 'container_name',
+    type: 'type', port: 'port', hostPath: 'host_path', gitRepo: 'git_repo', gitBranch: 'git_branch', url: 'url',
+  };
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  for (const key of allowed) {
+    if (key in fields) {
+      values.push(fields[key]);
+      sets.push(`${colMap[key]} = $${values.length}`);
+    }
+  }
+  if (sets.length === 0) return getProject(id);
+  values.push(id);
+  const { rows } = await pool.query(
+    `UPDATE projects SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING *`,
+    values
+  );
+  return rows.length ? rowToProject(rows[0]) : null;
+}
+
 export async function deleteProject(id: string): Promise<Project | null> {
   const { rows } = await pool.query('DELETE FROM projects WHERE id = $1 RETURNING *', [id]);
   return rows.length ? rowToProject(rows[0]) : null;
