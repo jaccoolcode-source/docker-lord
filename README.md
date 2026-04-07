@@ -10,6 +10,9 @@ A web dashboard for managing local Docker projects behind [Traefik](https://trae
 - **Log streaming** — live SSE log panel per container
 - **Discover** — scans Docker for unregistered Traefik-routed containers and offers one-click import
 - **Add projects** — register local projects (by container name) or git-based deployments
+  - Git URL auto-fills app name, container name, and display name
+  - Local projects: browse and select host path via folder picker dialog
+- **Card metadata** — shows host path, git origin, and branch per project
 - **PostgreSQL storage** — project registry persisted in a local database
 
 ## Stack
@@ -33,6 +36,24 @@ A web dashboard for managing local Docker projects behind [Traefik](https://trae
    # start traefik from C:/Users/jaccu/Documents/Projects/traefik
    docker compose up -d
    ```
+
+## Setup
+
+Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+Key variables:
+
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `POSTGRES_DB` | `docker-lord` | Database name |
+| `POSTGRES_USER` | `docker-lord` | DB user |
+| `POSTGRES_PASSWORD` | `changeme` | DB password |
+| `HOST_PROJECTS_PATH` | `C:/Users/jaccu/Documents/Projects` | Host path to browse for folder picker |
+| `CONTAINER_PROJECTS_PATH` | `/host-projects` | Mount point inside container |
 
 ## Running
 
@@ -89,6 +110,8 @@ Browser → Traefik → docker-lord (Express)
 - **PostgreSQL** runs on an internal bridge network, not accessible from outside
 - **Data persistence** — PostgreSQL files bind-mounted to `./data/db/` (survives container/image removal)
 - **Seed** — `data/projects.json` is loaded once if the `projects` table is empty
+- **Host filesystem browsing** — `HOST_PROJECTS_PATH` bind-mounted read-only; backend translates container paths back to Windows host paths for display and storage
+- **Multi-network Traefik routing** — `traefik.docker.network=traefik` label ensures Traefik routes to the correct network when the container is on multiple networks
 
 ## API
 
@@ -103,6 +126,7 @@ Browser → Traefik → docker-lord (Express)
 | GET | `/api/projects/:id/rebuild-cmd` | Get rebuild shell command |
 | GET | `/api/projects/:id/logs` | SSE log stream |
 | GET | `/api/docker/discover` | Find unregistered Traefik containers |
+| GET | `/api/fs/browse` | Browse host filesystem directories |
 
 ## Redeploy
 
