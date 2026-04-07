@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import Dockerode from 'dockerode';
 import path from 'path';
+import fs from 'fs';
 import { initDb, getProjects, getProject, createProject, deleteProject } from './db';
 import type { Project } from './db';
 
@@ -204,6 +205,42 @@ app.get('/api/docker/discover', async (_req: Request, res: Response) => {
     res.json(discovered);
   } catch (err: unknown) {
     res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// ── Filesystem browser ────────────────────────────────────────────────────────
+
+app.get('/api/fs/browse', (req: Request, res: Response) => {
+  const hostBase = process.env.HOST_PROJECTS_PATH ?? 'C:/Users/jaccu/Documents/Projects';
+  const containerBase = process.env.CONTAINER_PROJECTS_PATH ?? '/host-projects';
+
+  // Requested path is always a host-style path; translate to container path for reading
+  const requestedHost = String(req.query.path ?? hostBase).replace(/\\/g, '/');
+
+  // Security: ensure requested path starts with the host base (no traversal)
+  if (!requestedHost.startsWith(hostBase.replace(/\\/g, '/'))) {
+    return res.status(403).json({ error: 'Access outside projects directory is not allowed' });
+  }
+
+  const containerPath = requestedHost.replace(hostBase.replace(/\\/g, '/'), containerBase);
+
+  try {
+    const entries = fs.readdirSync(containerPath, { withFileTypes: true });
+    const dirs = entries
+      .filter(e => e.isDirectory() && !e.name.startsWith('.'))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(e => ({
+        name: e.name,
+        hostPath: `${requestedHost}/${e.name}`,
+      }));
+
+    const parentHost = requestedHost !== hostBase.replace(/\\/g, '/')
+      ? requestedHost.substring(0, requestedHost.lastIndexOf('/'))
+      : null;
+
+    res.json({ current: requestedHost, parent: parentHost, dirs });
+  } catch {
+    res.status(400).json({ error: 'Cannot read directory' });
   }
 });
 

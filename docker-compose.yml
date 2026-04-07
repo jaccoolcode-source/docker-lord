@@ -3,10 +3,14 @@ services:
     build: .
     container_name: docker-lord
     restart: unless-stopped
+    volumes:
+      - ${HOST_PROJECTS_PATH}:${CONTAINER_PROJECTS_PATH}:ro
     environment:
       - DOCKER_TCP_HOST=host.docker.internal
       - DOCKER_TCP_PORT=2375
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - HOST_PROJECTS_PATH=${HOST_PROJECTS_PATH}
+      - CONTAINER_PROJECTS_PATH=${CONTAINER_PROJECTS_PATH}
     depends_on:
       db:
         condition: service_healthy
@@ -15,6 +19,7 @@ services:
       - internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
       - "traefik.http.routers.docker-lord.rule=Host(`docker-lord.localhost`)"
       - "traefik.http.routers.docker-lord.entrypoints=web"
       - "traefik.http.services.docker-lord.loadbalancer.server.port=3000"

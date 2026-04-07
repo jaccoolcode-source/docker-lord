@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { NewProject } from '../types';
+import { FolderPicker } from './FolderPicker';
 
 interface Props {
   onClose: () => void;
@@ -25,6 +26,21 @@ export function AddProjectModal({ onClose, onSave }: Props) {
   const handleAppNameChange = (val: string) => {
     setAppName(val);
     if (!containerManuallySet) setContainerName(val);
+  };
+
+  const handleGitRepoChange = (val: string) => {
+    setGitRepo(val);
+    // Extract repo name from URL: https://github.com/user/my-cool-app.git → my-cool-app
+    const match = val.trim().match(/\/([^/]+?)(?:\.git)?$/);
+    if (!match) return;
+    const repoName = match[1].toLowerCase();
+    const displayName = repoName
+      .split('-')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+    setAppName(repoName);
+    if (!containerManuallySet) setContainerName(repoName);
+    setName(displayName);
   };
 
   const handleSave = async () => {
@@ -76,6 +92,18 @@ export function AddProjectModal({ onClose, onSave }: Props) {
               ))}
             </div>
           </div>
+
+          {type === 'git' && (
+            <div className="field-group">
+              <label>Git Repository URL</label>
+              <input
+                type="text"
+                placeholder="https://github.com/user/repo.git"
+                value={gitRepo}
+                onChange={e => handleGitRepoChange(e.target.value)}
+              />
+            </div>
+          )}
 
           <div className="field-group">
             <label>Display Name *</label>
@@ -130,35 +158,23 @@ export function AddProjectModal({ onClose, onSave }: Props) {
           {type === 'local' && (
             <div className="field-group">
               <label>Host Path</label>
-              <input
-                type="text"
-                placeholder="C:/Users/jaccu/Documents/Projects/my-app"
+              <FolderPicker
                 value={hostPath}
-                onChange={e => setHostPath(e.target.value)}
+                onChange={setHostPath}
+                placeholder="C:/Users/jaccu/Documents/Projects/my-app"
               />
             </div>
           )}
 
           {type === 'git' && (
-            <>
-              <div className="field-group">
-                <label>Git Repository URL</label>
-                <input
-                  type="text"
-                  placeholder="https://github.com/user/repo.git"
-                  value={gitRepo}
-                  onChange={e => setGitRepo(e.target.value)}
-                />
-              </div>
-              <div className="field-group">
-                <label>Branch</label>
-                <input
-                  type="text"
-                  value={gitBranch}
-                  onChange={e => setGitBranch(e.target.value)}
-                />
-              </div>
-            </>
+            <div className="field-group">
+              <label>Branch</label>
+              <input
+                type="text"
+                value={gitBranch}
+                onChange={e => setGitBranch(e.target.value)}
+              />
+            </div>
           )}
 
           {error && <div className="form-error">{error}</div>}

@@ -46,9 +46,29 @@ export function ProjectCard({ project: p, onAction, onRemove, onLogs, onRebuildC
           <span className="label">Container</span>
           <span className="value">{p.containerName}</span>
         </div>
+        {p.hostPath && (
+          <div className="meta-row">
+            <span className="label">Path</span>
+            <span className="value meta-path" title={p.hostPath}>{p.hostPath}</span>
+          </div>
+        )}
         {p.gitRepo && (
           <div className="meta-row">
-            <span className="label">Git</span>
+            <span className="label">Origin</span>
+            <a
+              href={p.gitRepo.replace(/^https?:\/\/[^@]+@/, 'https://')}
+              target="_blank"
+              rel="noreferrer"
+              className="url-link meta-git"
+              title={p.gitRepo}
+            >
+              {p.gitRepo.replace(/^https?:\/\/[^@]+@/, '').replace(/\.git$/, '')}
+            </a>
+          </div>
+        )}
+        {p.gitRepo && (
+          <div className="meta-row">
+            <span className="label">Branch</span>
             <span className="value">{p.gitBranch ?? 'main'}</span>
           </div>
         )}
