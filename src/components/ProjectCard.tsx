@@ -1,4 +1,6 @@
+import { Play, Square, RotateCw, Hammer, Pencil, ScrollText, Trash2 } from 'lucide-react';
 import type { Project } from '../types';
+import { IBtn } from './IBtn';
 
 const STATUS_DOT: Record<string, string> = {
   running: 'running',
@@ -80,38 +82,18 @@ export function ProjectCard({ project: p, onAction, onRemove, onLogs, onRebuildC
       </div>
 
       <div className="card-actions">
-        {running ? (
-          <button className="btn btn-secondary btn-sm" onClick={() => onAction(p.id, 'stop')}>
-            Stop
-          </button>
-        ) : (
-          <button className="btn btn-primary btn-sm" onClick={() => onAction(p.id, 'start')}>
-            Start
-          </button>
-        )}
-        <button
-          className="btn btn-secondary btn-sm"
-          disabled={!running}
-          onClick={() => onAction(p.id, 'restart')}
-        >
-          Restart
-        </button>
+        {running
+          ? <IBtn icon={Square} title="Stop" onClick={() => onAction(p.id, 'stop')} />
+          : <IBtn icon={Play} title="Start" variant="primary" onClick={() => onAction(p.id, 'start')} />
+        }
+        <IBtn icon={RotateCw} title="Restart" disabled={!running} onClick={() => onAction(p.id, 'restart')} />
         {p.type === 'local' && p.hostPath && (
-          <button className="btn btn-secondary btn-sm" onClick={() => onRebuildCmd(p.id)}>
-            Rebuild
-          </button>
+          <IBtn icon={Hammer} title="Rebuild" onClick={() => onRebuildCmd(p.id)} />
         )}
         <div className="spacer" />
-        <button className="btn-icon" title="Edit project" onClick={() => onEdit(p.id)}>✏️</button>
-        <button className="btn-icon" title="View logs" onClick={onLogs}>📜</button>
-        <button
-          className="btn-icon"
-          title="Remove from registry"
-          style={{ color: '#ef4444' }}
-          onClick={() => onRemove(p.id, p.name)}
-        >
-          🗑
-        </button>
+        <IBtn icon={Pencil} title="Edit project" onClick={() => onEdit(p.id)} />
+        <IBtn icon={ScrollText} title="View logs" onClick={onLogs} />
+        <IBtn icon={Trash2} title="Remove from registry" variant="danger" onClick={() => onRemove(p.id, p.name)} />
       </div>
     </div>
   );

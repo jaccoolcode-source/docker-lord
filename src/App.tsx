@@ -5,8 +5,11 @@ import {
   startProject, stopProject, restartProject,
   getRebuildCmd,
 } from './api';
+import { LayoutGrid, List } from 'lucide-react';
 import { Header } from './components/Header';
 import { ProjectCard } from './components/ProjectCard';
+import { ProjectRow } from './components/ProjectRow';
+import { IBtn } from './components/IBtn';
 import { AddProjectModal } from './components/AddProjectModal';
 import { EditProjectModal } from './components/EditProjectModal';
 import { DiscoverModal } from './components/DiscoverModal';
@@ -21,6 +24,14 @@ export default function App() {
   const [showDiscover, setShowDiscover] = useState(false);
   const [editProjectId, setEditProjectId] = useState<string | null>(null);
   const [activeLabels, setActiveLabels] = useState<string[]>([]);
+  const [view, setView] = useState<'grid' | 'list'>(() =>
+    (localStorage.getItem('dl-view') as 'grid' | 'list') ?? 'grid'
+  );
+
+  const setViewPersisted = (v: 'grid' | 'list') => {
+    setView(v);
+    localStorage.setItem('dl-view', v);
+  };
   const [rebuildCmd, setRebuildCmd] = useState<string | null>(null);
   const [logProjectId, setLogProjectId] = useState<string | null>(null);
 
@@ -108,38 +119,63 @@ export default function App() {
           </div>
         )}
 
-        {allLabels.length > 0 && (
+        <div className="toolbar">
           <div className="filter-bar">
-            <span className="filter-bar-label">Filter:</span>
-            {allLabels.map(l => (
-              <span
-                key={l}
-                className={`label-chip ${activeLabels.includes(l) ? 'active' : ''}`}
-                onClick={() => toggleLabel(l)}
-              >
-                {l}
-              </span>
-            ))}
-            {activeLabels.length > 0 && (
-              <button className="btn-link" onClick={() => setActiveLabels([])}>Clear</button>
+            {allLabels.length > 0 && (
+              <>
+                <span className="filter-bar-label">Filter:</span>
+                {allLabels.map(l => (
+                  <span
+                    key={l}
+                    className={`label-chip ${activeLabels.includes(l) ? 'active' : ''}`}
+                    onClick={() => toggleLabel(l)}
+                  >
+                    {l}
+                  </span>
+                ))}
+                {activeLabels.length > 0 && (
+                  <button className="btn-link" onClick={() => setActiveLabels([])}>Clear</button>
+                )}
+              </>
             )}
           </div>
-        )}
-
-        <div className="projects-grid">
-          {visibleProjects.map(p => (
-            <ProjectCard
-              key={p.id}
-              project={p}
-              onAction={handleAction}
-              onRemove={handleRemove}
-              onLogs={() => setLogProjectId(p.id)}
-              onRebuildCmd={handleRebuildCmd}
-              onEdit={() => setEditProjectId(p.id)}
-              onLabelClick={toggleLabel}
-            />
-          ))}
+          <div className="view-toggle">
+            <IBtn icon={LayoutGrid} title="Grid view" variant={view === 'grid' ? 'primary' : 'default'} onClick={() => setViewPersisted('grid')} />
+            <IBtn icon={List} title="List view" variant={view === 'list' ? 'primary' : 'default'} onClick={() => setViewPersisted('list')} />
+          </div>
         </div>
+
+        {view === 'grid' ? (
+          <div className="projects-grid">
+            {visibleProjects.map(p => (
+              <ProjectCard
+                key={p.id}
+                project={p}
+                onAction={handleAction}
+                onRemove={handleRemove}
+                onLogs={() => setLogProjectId(p.id)}
+                onRebuildCmd={handleRebuildCmd}
+                onEdit={() => setEditProjectId(p.id)}
+                onLabelClick={toggleLabel}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="projects-list">
+            {visibleProjects.map(p => (
+              <ProjectRow
+                key={p.id}
+                project={p}
+                onAction={handleAction}
+                onRemove={handleRemove}
+                onLogs={() => setLogProjectId(p.id)}
+                onRebuildCmd={handleRebuildCmd}
+                onEdit={() => setEditProjectId(p.id)}
+                onLabelClick={toggleLabel}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       {showAdd && (
