@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Project, NewProject } from '../types';
 import { FolderPicker } from './FolderPicker';
+import { TagInput } from './TagInput';
 
 interface Props {
   project: Project;
@@ -17,6 +18,7 @@ export function EditProjectModal({ project: p, onClose, onSave }: Props) {
   const [hostPath, setHostPath] = useState(p.hostPath ?? '');
   const [gitRepo, setGitRepo] = useState(p.gitRepo ?? '');
   const [gitBranch, setGitBranch] = useState(p.gitBranch ?? 'main');
+  const [labels, setLabels] = useState<string[]>(p.labels ?? []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +40,7 @@ export function EditProjectModal({ project: p, onClose, onSave }: Props) {
         hostPath: hostPath.trim() || undefined,
         gitRepo: gitRepo.trim() || undefined,
         gitBranch: gitBranch.trim() || 'main',
+        labels,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save');
@@ -127,6 +130,12 @@ export function EditProjectModal({ project: p, onClose, onSave }: Props) {
               value={gitBranch}
               onChange={e => setGitBranch(e.target.value)}
             />
+          </div>
+
+          <div className="field-group">
+            <label>Labels</label>
+            <TagInput value={labels} onChange={setLabels} />
+            <small>Press Enter or comma to add a label</small>
           </div>
 
           {error && <div className="form-error">{error}</div>}

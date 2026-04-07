@@ -14,6 +14,7 @@ export interface Project {
   gitRepo: string | null;
   gitBranch: string | null;
   url: string;
+  labels: string[];
 }
 
 const pool = new Pool({
@@ -34,6 +35,7 @@ function rowToProject(row: Record<string, unknown>): Project {
     gitRepo: (row.git_repo as string | null) ?? null,
     gitBranch: (row.git_branch as string | null) ?? null,
     url: row.url as string,
+    labels: (row.labels as string[]) ?? [],
   };
 }
 
@@ -54,6 +56,7 @@ export async function initDb(): Promise<void> {
       created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
+  await pool.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS labels TEXT[] NOT NULL DEFAULT '{}';`);
 
   // Seed from projects.json if the table is empty
   const { rowCount } = await pool.query('SELECT 1 FROM projects LIMIT 1');
@@ -81,20 +84,20 @@ export async function getProject(id: string): Promise<Project | null> {
 
 export async function createProject(p: Omit<Project, never>): Promise<Project> {
   const { rows } = await pool.query(
-    `INSERT INTO projects (id, name, description, app_name, container_name, type, port, host_path, git_repo, git_branch, url)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+    `INSERT INTO projects (id, name, description, app_name, container_name, type, port, host_path, git_repo, git_branch, url, labels)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
      RETURNING *`,
     [p.id, p.name, p.description ?? '', p.appName, p.containerName, p.type ?? 'local',
-     p.port ?? 80, p.hostPath ?? null, p.gitRepo ?? null, p.gitBranch ?? null, p.url]
+     p.port ?? 80, p.hostPath ?? null, p.gitRepo ?? null, p.gitBranch ?? null, p.url, p.labels ?? []]
   );
   return rowToProject(rows[0]);
 }
 
 export async function updateProject(id: string, fields: Partial<Omit<Project, 'id'>>): Promise<Project | null> {
-  const allowed: (keyof typeof fields)[] = ['name', 'description', 'appName', 'containerName', 'type', 'port', 'hostPath', 'gitRepo', 'gitBranch', 'url'];
+  const allowed: (keyof typeof fields)[] = ['name', 'description', 'appName', 'containerName', 'type', 'port', 'hostPath', 'gitRepo', 'gitBranch', 'url', 'labels'];
   const colMap: Record<string, string> = {
     name: 'name', description: 'description', appName: 'app_name', containerName: 'container_name',
-    type: 'type', port: 'port', hostPath: 'host_path', gitRepo: 'git_repo', gitBranch: 'git_branch', url: 'url',
+    type: 'type', port: 'port', hostPath: 'host_path', gitRepo: 'git_repo', gitBranch: 'git_branch', url: 'url', labels: 'labels',
   };
   const sets: string[] = [];
   const values: unknown[] = [];

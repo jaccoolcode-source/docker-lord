@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { NewProject } from '../types';
 import { FolderPicker } from './FolderPicker';
+import { TagInput } from './TagInput';
 
 interface Props {
   onClose: () => void;
@@ -20,6 +21,7 @@ export function AddProjectModal({ onClose, onSave }: Props) {
   const [hostPath, setHostPath] = useState('');
   const [gitRepo, setGitRepo] = useState('');
   const [gitBranch, setGitBranch] = useState('main');
+  const [labels, setLabels] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,6 +63,7 @@ export function AddProjectModal({ onClose, onSave }: Props) {
         hostPath: hostPath.trim() || undefined,
         gitRepo: gitRepo.trim() || undefined,
         gitBranch: gitBranch.trim() || 'main',
+        labels,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save');
@@ -176,6 +179,12 @@ export function AddProjectModal({ onClose, onSave }: Props) {
               />
             </div>
           )}
+
+          <div className="field-group">
+            <label>Labels</label>
+            <TagInput value={labels} onChange={setLabels} />
+            <small>Press Enter or comma to add a label</small>
+          </div>
 
           {error && <div className="form-error">{error}</div>}
         </div>

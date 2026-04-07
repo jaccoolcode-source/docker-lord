@@ -20,6 +20,7 @@ export default function App() {
   const [showAdd, setShowAdd] = useState(false);
   const [showDiscover, setShowDiscover] = useState(false);
   const [editProjectId, setEditProjectId] = useState<string | null>(null);
+  const [activeLabels, setActiveLabels] = useState<string[]>([]);
   const [rebuildCmd, setRebuildCmd] = useState<string | null>(null);
   const [logProjectId, setLogProjectId] = useState<string | null>(null);
 
@@ -79,6 +80,13 @@ export default function App() {
 
   const editProject = projects.find(p => p.id === editProjectId) ?? null;
   const logProject = projects.find(p => p.id === logProjectId) ?? null;
+
+  const allLabels = [...new Set(projects.flatMap(p => p.labels ?? []))].sort();
+  const toggleLabel = (l: string) =>
+    setActiveLabels(prev => prev.includes(l) ? prev.filter(x => x !== l) : [...prev, l]);
+  const visibleProjects = activeLabels.length === 0
+    ? projects
+    : projects.filter(p => activeLabels.some(l => (p.labels ?? []).includes(l)));
   const runningCount = projects.filter(p => p.docker?.running).length;
 
   return (
@@ -99,8 +107,27 @@ export default function App() {
             <p>Add your first project or click Discover to find running containers.</p>
           </div>
         )}
+
+        {allLabels.length > 0 && (
+          <div className="filter-bar">
+            <span className="filter-bar-label">Filter:</span>
+            {allLabels.map(l => (
+              <span
+                key={l}
+                className={`label-chip ${activeLabels.includes(l) ? 'active' : ''}`}
+                onClick={() => toggleLabel(l)}
+              >
+                {l}
+              </span>
+            ))}
+            {activeLabels.length > 0 && (
+              <button className="btn-link" onClick={() => setActiveLabels([])}>Clear</button>
+            )}
+          </div>
+        )}
+
         <div className="projects-grid">
-          {projects.map(p => (
+          {visibleProjects.map(p => (
             <ProjectCard
               key={p.id}
               project={p}
@@ -109,6 +136,7 @@ export default function App() {
               onLogs={() => setLogProjectId(p.id)}
               onRebuildCmd={handleRebuildCmd}
               onEdit={() => setEditProjectId(p.id)}
+              onLabelClick={toggleLabel}
             />
           ))}
         </div>

@@ -19,6 +19,7 @@ export interface Project {
   gitRepo: string | null;
   gitBranch: string | null;
   url: string;
+  labels: string[];
   docker?: DockerStatus;
 }
 
@@ -32,6 +33,7 @@ export interface NewProject {
   hostPath?: string;
   gitRepo?: string;
   gitBranch?: string;
+  labels?: string[];
 }
 
 export interface DiscoveredContainer {

@@ -66,7 +66,7 @@ app.get('/api/projects/:id', async (req: Request, res: Response) => {
 });
 
 app.post('/api/projects', async (req: Request, res: Response) => {
-  const { name, description, appName, containerName, type, port, hostPath, gitRepo, gitBranch } =
+  const { name, description, appName, containerName, type, port, hostPath, gitRepo, gitBranch, labels } =
     req.body as Partial<Project>;
 
   if (!name || !appName || !containerName) {
@@ -89,6 +89,7 @@ app.post('/api/projects', async (req: Request, res: Response) => {
       gitRepo: gitRepo ?? null,
       gitBranch: gitBranch ?? 'main',
       url: `http://${appName}.localhost`,
+      labels: labels ?? [],
     });
     res.status(201).json(project);
   } catch (err: unknown) {
@@ -100,7 +101,7 @@ app.put('/api/projects/:id', async (req: Request, res: Response) => {
   const project = await getProject(req.params.id);
   if (!project) return res.status(404).json({ error: 'Not found' });
 
-  const { name, description, appName, containerName, type, port, hostPath, gitRepo, gitBranch } =
+  const { name, description, appName, containerName, type, port, hostPath, gitRepo, gitBranch, labels } =
     req.body as Partial<Project>;
 
   try {
@@ -110,6 +111,7 @@ app.put('/api/projects/:id', async (req: Request, res: Response) => {
       gitRepo: gitRepo ?? null,
       gitBranch: gitBranch ?? null,
       url: appName ? `http://${appName}.localhost` : undefined,
+      labels,
     });
     res.json(updated);
   } catch (err: unknown) {

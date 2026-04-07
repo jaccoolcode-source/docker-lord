@@ -14,9 +14,10 @@ interface Props {
   onLogs: () => void;
   onRebuildCmd: (id: string) => Promise<void>;
   onEdit: (id: string) => void;
+  onLabelClick?: (label: string) => void;
 }
 
-export function ProjectCard({ project: p, onAction, onRemove, onLogs, onRebuildCmd, onEdit }: Props) {
+export function ProjectCard({ project: p, onAction, onRemove, onLogs, onRebuildCmd, onEdit, onLabelClick }: Props) {
   const status = p.docker?.status ?? 'unknown';
   const running = p.docker?.running ?? false;
   const dotClass = STATUS_DOT[status] ?? 'error';
@@ -29,6 +30,9 @@ export function ProjectCard({ project: p, onAction, onRemove, onLogs, onRebuildC
           <div className={`status-dot ${dotClass}`} title={statusLabel} />
           <span className="card-name">{p.name}</span>
           <span className={`type-badge ${p.type}`}>{p.type}</span>
+          {p.labels?.map(l => (
+            <span key={l} className="label-chip" onClick={() => onLabelClick?.(l)}>{l}</span>
+          ))}
         </div>
       </div>
 
